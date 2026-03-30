@@ -1,0 +1,3 @@
+# SSH MCP Server Configuration
+private_key: ~/.ssh/id_rsa
+listen: ":8080"
