@@ -9,17 +9,54 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "config.yaml", "path to config file")
+	configPath := flag.String("config", "", "path to config file")
+	sshKeyPath := flag.String("ssh-key", "", "path to SSH private key (overrides config file)")
+	opSSHKey := flag.String("op-ssh-key", "", "1Password secret reference for SSH key (e.g. op://vault/item/private_key)")
+	listen := flag.String("listen", "", "listen address (overrides config file, default :8080)")
 	flag.Parse()
 
-	cfg, err := LoadConfig(*configPath)
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	var cfg *Config
+
+	// Load config file if specified
+	if *configPath != "" {
+		var err error
+		cfg, err = LoadConfig(*configPath)
+		if err != nil {
+			log.Fatalf("Failed to load config: %v", err)
+		}
+	} else {
+		cfg = &Config{Listen: ":8080"}
 	}
 
-	sshClient, err := NewSSHClient(cfg.PrivateKey)
-	if err != nil {
-		log.Fatalf("Failed to initialize SSH client: %v", err)
+	// Flag overrides
+	if *listen != "" {
+		cfg.Listen = *listen
+	}
+	if *sshKeyPath != "" {
+		cfg.PrivateKey = *sshKeyPath
+	}
+
+	// Determine SSH client
+	var sshClient *SSHClient
+	var err error
+
+	switch {
+	case *opSSHKey != "":
+		keyData, err := LoadSSHKeyFromOnePassword(*opSSHKey)
+		if err != nil {
+			log.Fatalf("Failed to load SSH key from 1Password: %v", err)
+		}
+		sshClient, err = NewSSHClientFromKeyData(keyData)
+		if err != nil {
+			log.Fatalf("Failed to initialize SSH client from 1Password key: %v", err)
+		}
+	case cfg.PrivateKey != "":
+		sshClient, err = NewSSHClient(cfg.PrivateKey)
+		if err != nil {
+			log.Fatalf("Failed to initialize SSH client: %v", err)
+		}
+	default:
+		log.Fatal("SSH key must be provided via --ssh-key, --op-ssh-key, or config file private_key")
 	}
 
 	store := NewConnectionStore()

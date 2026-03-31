@@ -17,6 +17,10 @@ func NewSSHClient(privateKeyPath string) (*SSHClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read private key %s: %w", privateKeyPath, err)
 	}
+	return NewSSHClientFromKeyData(keyData)
+}
+
+func NewSSHClientFromKeyData(keyData []byte) (*SSHClient, error) {
 	signer, err := ssh.ParsePrivateKey(keyData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
