@@ -12,6 +12,7 @@ func main() {
 	configPath := flag.String("config", "", "path to config file")
 	sshKeyPath := flag.String("ssh-key", "", "path to SSH private key (overrides config file)")
 	opSSHKey := flag.String("op-ssh-key", "", "1Password secret reference for SSH key (e.g. op://vault/item/private_key)")
+	consulSSHKey := flag.String("consul-ssh-key", "", "Consul KV path for SSH key (e.g. ssh/keys/my-server)")
 	listen := flag.String("listen", "", "listen address (overrides config file, default :8080)")
 	flag.Parse()
 
@@ -50,13 +51,22 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to initialize SSH client from 1Password key: %v", err)
 		}
+	case *consulSSHKey != "":
+		keyData, err := LoadSSHKeyFromConsul(*consulSSHKey)
+		if err != nil {
+			log.Fatalf("Failed to load SSH key from Consul: %v", err)
+		}
+		sshClient, err = NewSSHClientFromKeyData(keyData)
+		if err != nil {
+			log.Fatalf("Failed to initialize SSH client from Consul key: %v", err)
+		}
 	case cfg.PrivateKey != "":
 		sshClient, err = NewSSHClient(cfg.PrivateKey)
 		if err != nil {
 			log.Fatalf("Failed to initialize SSH client: %v", err)
 		}
 	default:
-		log.Fatal("SSH key must be provided via --ssh-key, --op-ssh-key, or config file private_key")
+		log.Fatal("SSH key must be provided via --ssh-key, --op-ssh-key, --consul-ssh-key, or config file private_key")
 	}
 
 	store := NewConnectionStore()

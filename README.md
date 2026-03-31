@@ -7,7 +7,7 @@ An MCP (Model Context Protocol) server that provides SSH remote operations as to
 - Execute commands on remote servers via SSH
 - Read and write files on remote servers via SFTP
 - Manage multiple SSH connections
-- Support SSH key from file path, config file, or 1Password
+- Support SSH key from file path, config file, 1Password, or Consul KV
 
 ## Installation
 
@@ -32,6 +32,14 @@ export OP_SERVICE_ACCOUNT_TOKEN="your-token"
 ssh-mcp --op-ssh-key "op://vault/item/private_key"
 ```
 
+### With Consul KV
+
+Store your SSH key in Consul KV and pass the key path. Consul address is configured via `CONSUL_HTTP_ADDR` (default `127.0.0.1:8500`):
+
+```bash
+ssh-mcp --consul-ssh-key "ssh/keys/my-server"
+```
+
 ### With config file
 
 ```bash
@@ -44,10 +52,11 @@ ssh-mcp --config config.yaml
 |------|-------------|---------|
 | `--ssh-key` | Path to SSH private key file | |
 | `--op-ssh-key` | 1Password secret reference for SSH key (e.g. `op://vault/item/private_key`) | |
+| `--consul-ssh-key` | Consul KV path for SSH key (e.g. `ssh/keys/my-server`) | |
 | `--config` | Path to YAML config file | |
 | `--listen` | Listen address | `:8080` |
 
-Priority: `--op-ssh-key` > `--ssh-key` / config file `private_key`.
+Priority: `--op-ssh-key` > `--consul-ssh-key` > `--ssh-key` / config file `private_key`.
 
 ### Config file format
 
