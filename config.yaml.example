@@ -1,3 +1,64 @@
 # SSH MCP Server Configuration
+
+# Safer default: bind to localhost only. Use ":8080" only if you intentionally
+# expose the server beyond the local machine and have authentication in place.
+listen: "127.0.0.1:8080"
+
+# Optional Bearer token required for MCP HTTP requests.
+# You can also pass --auth-token or inject this with your process manager.
+auth_token: ""
+
+# Default SSH private key used for connections that do not specify their own
+# private_key. Supports ~ and environment variables.
 private_key: ~/.ssh/id_rsa
-listen: ":8080"
+
+# Optional passphrase for the default SSH private key. Prefer environment
+# variable interpolation from your process manager instead of plaintext secrets.
+private_key_passphrase: ""
+
+# Verify SSH server host keys with known_hosts by default.
+known_hosts: ~/.ssh/known_hosts
+
+# Unsafe. Only set true for local testing or controlled environments.
+insecure_ignore_host_key: false
+
+# SSH dial timeout in seconds.
+ssh_timeout_seconds: 15
+
+# Default command execution timeout in seconds. Tool calls may override this with
+# timeout_seconds.
+command_timeout_seconds: 60
+
+# Default maximum bytes read by read_file. Tool calls may override this with
+# max_bytes.
+max_read_bytes: 1048576
+
+# Connection store. Use "memory" for in-memory only, or "file" to persist
+# add_connection/delete_connection changes across restarts.
+connection_store:
+  type: memory
+  # path: ~/.config/ssh-mcp/connections.yaml
+
+# Optional policy guardrails. Empty lists mean unrestricted for that dimension.
+policy:
+  allowed_connections: []
+  denied_commands: []
+  allowed_paths: []
+  readonly: false
+  disable_exec: false
+  disable_write: false
+
+# Optional JSONL audit log for SSH and SFTP operations.
+audit:
+  enabled: false
+  path: ~/.config/ssh-mcp/audit.jsonl
+
+# Optional connections to load at startup. These are added to the configured
+# connection store. A connection may override the default private key.
+connections:
+  - name: example
+    user: ubuntu
+    server: 127.0.0.1
+    port: 22
+    # private_key: ~/.ssh/example_ed25519
+    # private_key_passphrase: ""
