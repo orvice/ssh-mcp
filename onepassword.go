@@ -14,7 +14,7 @@ func LoadSSHKeyFromOnePassword(secretReference string) ([]byte, error) {
 	client, err := onepassword.NewClient(
 		context.Background(),
 		onepassword.WithServiceAccountToken(token),
-		onepassword.WithIntegrationInfo("ssh-mcp", "1.0.0"),
+		onepassword.WithIntegrationInfo("ssh-mcp", version),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create 1Password client: %w", err)
